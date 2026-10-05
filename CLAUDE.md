@@ -52,14 +52,13 @@ External tools required: `yt-dlp`, `ffmpeg` (both via `brew install`).
 
 ## Hook Setup
 
-The Claude Code voice hook lives at `~/.config/cmdr-data-voice/` with:
-- `speak.sh` -- the Stop hook script
-- `clip_14.wav` -- reference audio
-- `ref_transcript.txt` -- transcript of the reference clip
-- `speak.log` -- debug log (appends)
-- `speak.pid` -- PID file for killing stale instances
+The Claude Code voice hook runs from `claude-code-hook/` in this repo (see its README):
+- `speak.sh` -- the Stop hook; exits immediately if `~/.claude/speak-on` is absent, otherwise backgrounds the pipeline and exits 0
+- `speak_pipeline.py` -- last reply -> `prepare_text.py` -> Data rewrite by Claude Haiku via `claude -p` (thinking off; local :8082 rewriter as fallback and for local-model sessions) -> Qwen3-TTS on the resident voice server (:8880) -> `afplay`
+- Voice: `data_output/cmdr_data_voice/` (`data_ref.wav`, `data_ref.txt`, `voice_config.json`)
+- Log: `~/.claude/speak/speak.log`; process-group id in `~/.claude/speak/pid`
 
-Registered in `~/.claude/settings.json` under `hooks.Stop`. Uses `mlx_audio.tts.generate` installed globally via `uv tool install mlx-audio --prerelease=allow`.
+Registered in `~/.claude/settings.json` under `hooks.Stop` (timeout 10).
 
 ## Next Steps
 

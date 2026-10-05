@@ -1,79 +1,50 @@
 # Claude Code Voice Hook
 
-Speaks Claude Code's responses aloud using a cloned voice. Uses the [Stop hook](https://docs.anthropic.com/en/docs/claude-code/hooks) to trigger TTS after each response.
+Speaks a short Commander Data version of each Claude Code reply. Uses the [Stop hook](https://docs.anthropic.com/en/docs/claude-code/hooks), which fires after each response.
+
+## How it works
+
+`speak.sh` checks the on/off flag, starts `speak_pipeline.py` in the background and exits 0 at once, so it never holds up Claude Code. The pipeline:
+
+1. Takes the final reply from the transcript: the assistant text after the last tool result or user message.
+2. Cleans it with `../data_output/cmdr_data_voice/prepare_text.py`: removes markdown and code, says file names as "session dot py", and expands contractions.
+3. Rewrites it in Data's voice with **Claude Haiku** (`claude-haiku-4-5`), through the logged-in Claude Code CLI (`claude -p`), using the prompt in `~/AI-Workspace/data-persona/haiku_system.txt`. This takes about 2.5 s and counts toward your Claude plan's usage, with no API key needed. Thinking is off: with it on, calls took 10–60 s. `DATA_VOICE_CHILD=1` stops that `claude -p` session from triggering this hook itself.
+4. Clones the voice with Qwen3-TTS on the resident mlx-audio voice server on `127.0.0.1:8880`. It uses `data_ref.wav` and the settings in `voice_config.json`.
+5. Plays the result with `afplay`.
+
+**Fallbacks:** if Haiku fails, or the session runs on a local model (`ANTHROPIC_BASE_URL` set), the local two-pass rewriter on `127.0.0.1:8082` is used instead. If that is down too, the first 3 cleaned sentences are spoken. If the voice server is down, macOS `say` reads the text.
+
+Each new reply stops the previous one's speech by killing its process group.
 
 ## Requirements
 
-- macOS with Apple Silicon
-- [uv](https://docs.astral.sh/uv/)
-- [jq](https://jqlang.github.io/jq/) (`brew install jq`)
-- A reference WAV clip of the voice you want to clone, plus a text transcript of what's said in the clip
+- macOS on Apple Silicon. The script uses only the Python standard library.
+- The local AI stack running (`localai`). It starts the rewriter (`~/models/tools/rewrite.sh`) and the voice server (`~/models/tools/voice.sh`).
+- The voice package in `../data_output/cmdr_data_voice/`.
 
 ## Setup
 
-### 1. Install mlx-audio globally
-
-```bash
-uv tool install mlx-audio --prerelease=allow
-```
-
-This makes `mlx_audio.tts.generate` available as a CLI command everywhere.
-
-### 2. Prepare reference audio
-
-Create a config directory and copy your reference clip and transcript:
-
-```bash
-mkdir -p ~/.config/cmdr-data-voice
-cp /path/to/your/reference_clip.wav ~/.config/cmdr-data-voice/clip_14.wav
-echo "The exact words spoken in the reference clip" > ~/.config/cmdr-data-voice/ref_transcript.txt
-```
-
-The reference clip should be a clean speech sample (10-30 seconds). The transcript should match the audio exactly.
-
-### 3. Install the hook script
-
-Copy `speak.sh` to your config directory and make it executable:
-
-```bash
-cp speak.sh ~/.config/cmdr-data-voice/speak.sh
-chmod +x ~/.config/cmdr-data-voice/speak.sh
-```
-
-Edit the script to update `REF_AUDIO`, `REF_TEXT`, and `MODEL` if needed.
-
-### 4. Register the hook
-
-Merge the contents of `settings-snippet.json` into your `~/.claude/settings.json`:
+Register `speak.sh` as a Stop hook in `~/.claude/settings.json`:
 
 ```json
 {
   "hooks": {
     "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOME/.config/cmdr-data-voice/speak.sh",
-            "timeout": 120
-          }
-        ]
-      }
+      { "hooks": [ { "type": "command",
+                     "command": "/Users/admin/Development/CharacterVoiceCloning/CharacterVoiceCloning/claude-code-hook/speak.sh",
+                     "timeout": 10 } ] }
     ]
   }
 }
 ```
 
-### 5. Test it
+## Use
 
-Start a new Claude Code session and send a message. After Claude responds, you should hear the response spoken aloud.
-
-Check `~/.config/cmdr-data-voice/speak.log` for debug output if it doesn't work.
+- **On:** `touch ~/.claude/speak-on`
+- **Off:** `rm ~/.claude/speak-on`
+- **Log:** `~/.claude/speak/speak.log`
 
 ## Notes
 
-- The first run downloads the model weights (~600MB for 0.6B-8bit). Subsequent runs use the cached model.
-- The hook kills any previous TTS instance before starting a new one, so rapid responses won't overlap.
-- A 1-second delay before reading the transcript ensures the latest response is captured.
-- Text is truncated to 2000 characters to keep generation time reasonable.
-- To disable, remove the `Stop` hook from `~/.claude/settings.json`.
+- **Delay:** about 2.5 s for the Haiku rewrite (about 1 s with the local rewriter) plus about 1.5 s of voice generation for a typical summary. The first voice request after the server starts takes about 5 s while it loads the model.
+- **Memory:** the rewriter uses about 3–4 GB and the TTS model about 1 GB in the voice server, alongside the main chat model.

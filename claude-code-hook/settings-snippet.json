@@ -5,8 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.config/cmdr-data-voice/speak.sh",
-            "timeout": 120
+            "command": "/Users/admin/Development/CharacterVoiceCloning/CharacterVoiceCloning/claude-code-hook/speak.sh",
+            "timeout": 10
           }
         ]
       }
