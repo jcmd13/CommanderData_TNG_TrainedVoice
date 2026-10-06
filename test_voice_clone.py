@@ -34,6 +34,119 @@ REFERENCE_CLIPS = {
         ),
         "duration": "14s",
     },
+    # Joined soundboard clips built by: import_clips.py commander_data_audio_files --reference ...
+    "data_ref_a": {
+        "path": "data_output/references/data_ref_a.wav",
+        "transcript": (
+            "I have an ultimate storage capacity of eight hundred quadrillion bits. "
+            "My total linear computational speed has been rated at sixty trillion operations per second. "
+            "The anomaly is two hundred million kilometers in diameter."
+        ),
+        "duration": "12.5s",
+    },
+    "data_ref_b": {
+        "path": "data_output/references/data_ref_b.wav",
+        "transcript": (
+            "Although I do not speak from personal experience, I have seen it have a profound psychological impact. "
+            "I have observed that the selection of food is often influenced by the mood of the person ordering."
+        ),
+        "duration": "11.0s",
+    },
+    "data_ref_c": {
+        "path": "data_output/references/data_ref_c.wav",
+        "transcript": (
+            "In almost all societies, it is traditional to say a ritual farewell to those you call friends. "
+            "When one of my friends is distraught, I have learned that the thoughtful thing to do "
+            "is to attempt to make him feel more comfortable."
+        ),
+        "duration": "13.4s",
+    },
+    # Data-only windows from "The Offspring" (YouTube Short D0IY_t2itPE), cut with extract_clip
+    "short_a": {
+        "path": "data_output/references/short_a.wav",
+        "transcript": (
+            "I have asked myself that many times, as I have struggled to be more human. "
+            "Until I realized, it is the struggle itself that is most important."
+        ),
+        "duration": "13.3s",
+    },
+    "short_b": {
+        "path": "data_output/references/short_b.wav",
+        "transcript": (
+            "We must strive to be more than we are, Lal. "
+            "It does not matter that we will never reach our ultimate goal. "
+            "The effort yields its own rewards."
+        ),
+        "duration": "12.0s",
+    },
+    "short_full": {
+        "path": "data_output/references/short_full.wav",
+        "transcript": (
+            "I have asked myself that many times, as I have struggled to be more human. "
+            "Until I realized, it is the struggle itself that is most important. "
+            "We must strive to be more than we are, Lal. "
+            "It does not matter that we will never reach our ultimate goal. "
+            "The effort yields its own rewards."
+        ),
+        "duration": "25.3s",
+    },
+    # Data-only windows from "Darmok" (YouTube 4-O5Fr-jDe0) and the holodeck Short (R7JfEfIX9As)
+    "darmok_a": {
+        "path": "data_output/references/darmok_a.wav",
+        "transcript": (
+            "The Tamarian ego structure does not seem to allow what we normally think of as self-identity. "
+            "Their ability to abstract is highly unusual. They seem to communicate through narrative imagery, "
+            "a reference to the individuals and places which appear in their mytho-historical accounts."
+        ),
+        "duration": "15.9s",
+    },
+    "darmok_b": {
+        "path": "data_output/references/darmok_b.wav",
+        "transcript": (
+            "No, sir. The situation is analogous to understanding the grammar of a language, "
+            "but none of the vocabulary. "
+            "It is necessary for us to learn the narrative from which the Tamarians draw their imagery."
+        ),
+        "duration": "12.4s",
+    },
+    "holo_a": {
+        "path": "data_output/references/holo_a.wav",
+        "transcript": (
+            "Through deduction, sir. Lieutenant Barkley and I tried to transport a simulated object off the holodeck, "
+            "something that has never been attempted. Since the transporter itself is a simulation, "
+            "the computer had no real data from which to create the transport logs."
+        ),
+        "duration": "12.1s",
+    },
+    # Data's voiceover narration from "Data's Day" (TNG S04E11), center channel of the Blu-ray 7.1 mix
+    "ve_crusher": {
+        "path": "data_output/references/ve_crusher.wav",
+        "transcript": (
+            "I am rarely in need of Doctor Beverly Crusher's professional services, "
+            "as my biomechanical maintenance program is self-sufficient. "
+            "But I often observe as she practices medicine on others, "
+            "and have learned a great deal about human interaction from her."
+        ),
+        "duration": "18.8s",
+    },
+    "ve_worf": {
+        "path": "data_output/references/ve_worf.wav",
+        "transcript": (
+            "I find Lieutenant Worf to be what is called a kindred spirit. "
+            "We were both orphans rescued by Starfleet officers. "
+            "In many ways, we are both still outsiders in human society."
+        ),
+        "duration": "11.7s",
+    },
+    "ve_vulcan": {
+        "path": "data_output/references/ve_vulcan.wav",
+        "transcript": (
+            "Since I am not affected by emotional considerations, I am closer to being Vulcan than human. "
+            "However, while their devotion to logic does have a certain appeal, "
+            "I find their stark philosophy to be somewhat... limited."
+        ),
+        "duration": "12.8s",
+    },
 }
 
 TEST_SENTENCES = [

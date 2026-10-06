@@ -15,3 +15,5 @@ wheels/
 data_output/
 clone_outputs/
 .python-version
+# Copyrighted TNG soundboard clips (personal use only, never publish)
+commander_data_audio_files/
