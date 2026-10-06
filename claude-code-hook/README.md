@@ -12,7 +12,9 @@ Speaks a short Commander Data version of each Claude Code reply. Uses the [Stop 
 4. Clones the voice with Qwen3-TTS on the resident mlx-audio voice server on `127.0.0.1:8880`. It uses `data_ref.wav` and the settings in `voice_config.json`.
 5. Plays the result with `afplay`.
 
-**Fallbacks:** if Haiku fails, or the session runs on a local model (`ANTHROPIC_BASE_URL` set), the local two-pass rewriter on `127.0.0.1:8082` is used instead. If that is down too, the first 3 cleaned sentences are spoken. If the voice server is down, macOS `say` reads the text.
+**Fallbacks:** if Haiku fails, or the session runs on a local model (`ANTHROPIC_BASE_URL` set), the local two-pass rewriter on `127.0.0.1:8082` is used instead. If that is down too, the first 3 cleaned sentences are spoken.
+
+**Voice resilience:** if the voice server is down (for example, after `localai stop` or a reboot), the pipeline starts it with `~/models/tools/voice.sh` in its own process session and waits up to 90 s. That reply takes about 10 s, and later replies are fast again. If the server still fails, it generates the audio directly with `mlx_audio.tts.generate` (about 7–20 s), still in Data's voice. macOS `say` is used only if both fail.
 
 Each new reply stops the previous one's speech by killing its process group.
 
@@ -47,4 +49,5 @@ Register `speak.sh` as a Stop hook in `~/.claude/settings.json`:
 ## Notes
 
 - **Delay:** about 2.5 s for the Haiku rewrite (about 1 s with the local rewriter) plus about 1.5 s of voice generation for a typical summary. The first voice request after the server starts takes about 5 s while it loads the model.
+- **After `localai stop`:** the next spoken reply restarts the voice server, which uses about 1–2 GB once the TTS model is loaded.
 - **Memory:** the rewriter uses about 3–4 GB and the TTS model about 1 GB in the voice server, alongside the main chat model.

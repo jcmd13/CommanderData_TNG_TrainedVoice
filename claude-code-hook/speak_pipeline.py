@@ -24,6 +24,10 @@ REWRITER_DIR = os.path.expanduser("~/AI-Workspace/data-persona")
 STATE = os.path.expanduser("~/.claude/speak")
 PIDFILE = os.path.join(STATE, "pid")
 TTS_URL = "http://127.0.0.1:8880/v1/audio/speech"
+VOICE_HEALTH = "http://127.0.0.1:8880/docs"
+VOICE_START = os.path.expanduser("~/models/tools/voice.sh")
+VOICE_LOG = os.path.expanduser("~/models/tools/voice.log")
+TTS_CLI = os.path.expanduser("~/.local/bin/mlx_audio.tts.generate")
 
 sys.path[:0] = [VOICE_DIR, REWRITER_DIR]
 from prepare_text import prepare  # noqa: E402
@@ -92,23 +96,69 @@ def to_data(text):
 
 
 def speak(text):
+    """Data's voice by the fastest route that works; macOS `say` only if every route fails."""
     cfg = json.load(open(os.path.join(VOICE_DIR, "voice_config.json")))
-    body = {"model": cfg["model"], "input": text, "response_format": "wav",
-            "ref_audio": os.path.join(VOICE_DIR, cfg["ref_audio"]),
-            "ref_text": open(os.path.join(VOICE_DIR, cfg["ref_text_file"])).read().strip(),
-            "temperature": cfg["temperature"], "lang_code": cfg["lang_code"]}
     wav = os.path.join(STATE, f"reply-{os.getpid()}.wav")
     try:
-        req = urllib.request.Request(TTS_URL, json.dumps(body).encode(), {"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=120) as r:
-            open(wav, "wb").write(r.read())
-        subprocess.run(["afplay", wav])
-    except Exception as e:
-        log(f"voice server unavailable ({e}); using say")
+        for route in (tts_server, tts_cli):
+            try:
+                route(text, cfg, wav)
+                subprocess.run(["afplay", wav])
+                return
+            except Exception as e:
+                log(f"{route.__name__} failed ({e})")
+        log("all voice routes failed; using say")
         subprocess.run(["say", text])
     finally:
         if os.path.exists(wav):
             os.remove(wav)
+
+
+def voice_server_up():
+    try:
+        urllib.request.urlopen(VOICE_HEALTH, timeout=2)
+        return True
+    except Exception:
+        return False
+
+
+def tts_server(text, cfg, wav):
+    """Resident voice server (~1.5 s). Starts it if the local AI stack is down."""
+    if not voice_server_up():
+        log("voice server down; starting it")
+        # own session, so the next reply's stop_previous() does not kill the server
+        subprocess.Popen([VOICE_START], stdin=subprocess.DEVNULL, stdout=open(VOICE_LOG, "a"),
+                         stderr=subprocess.STDOUT, start_new_session=True)
+        for _ in range(90):
+            time.sleep(1)
+            if voice_server_up():
+                break
+        else:
+            raise RuntimeError("voice server did not come up within 90 s")
+    body = {"model": cfg["model"], "input": text, "response_format": "wav",
+            "ref_audio": os.path.join(VOICE_DIR, cfg["ref_audio"]),
+            "ref_text": open(os.path.join(VOICE_DIR, cfg["ref_text_file"])).read().strip(),
+            "temperature": cfg["temperature"], "lang_code": cfg["lang_code"]}
+    req = urllib.request.Request(TTS_URL, json.dumps(body).encode(), {"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=180) as r:
+        open(wav, "wb").write(r.read())
+
+
+def tts_cli(text, cfg, wav):
+    """No server: load the model directly (~12-20 s), still in Data's voice."""
+    prefix = wav[:-4]
+    subprocess.run([TTS_CLI, "--model", cfg["model"], "--text", text,
+                    "--ref_audio", os.path.join(VOICE_DIR, cfg["ref_audio"]),
+                    "--ref_text", open(os.path.join(VOICE_DIR, cfg["ref_text_file"])).read().strip(),
+                    "--temperature", str(cfg["temperature"]), "--lang_code", cfg["lang_code"],
+                    "--output_path", STATE, "--file_prefix", os.path.basename(prefix),
+                    "--audio_format", "wav", "--join_audio"],
+                   check=True, capture_output=True, timeout=180)
+    made = sorted(f for f in os.listdir(STATE) if f.startswith(os.path.basename(prefix)) and f.endswith(".wav"))
+    if not made:
+        raise RuntimeError("CLI produced no audio")
+    if made[0] != os.path.basename(wav):
+        os.replace(os.path.join(STATE, made[0]), wav)
 
 
 def main():
