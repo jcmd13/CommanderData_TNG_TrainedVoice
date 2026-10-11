@@ -25,6 +25,16 @@ MODELS = {
 # Reference clips with hand-written transcripts (longest clips first)
 # Update these transcripts to match the actual audio content
 REFERENCE_CLIPS = {
+    # The chosen voice: "Data's Day" voiceover (see data_output/cmdr_data_voice/README.md)
+    "data_ref": {
+        "path": "data_output/cmdr_data_voice/data_ref.wav",
+        "transcript": (
+            "I find Lieutenant Worf to be what is called a kindred spirit. "
+            "We were both orphans rescued by Starfleet officers. "
+            "In many ways, we are both still outsiders in human society."
+        ),
+        "duration": "11.7s",
+    },
     "clip_14": {
         "path": "data_output/clips/clip_14.wav",
         "transcript": (
@@ -264,9 +274,9 @@ def main():
     parser.add_argument(
         "--clips",
         nargs="+",
-        default=["clip_14"],
+        default=["data_ref"],
         choices=list(REFERENCE_CLIPS.keys()),
-        help=f"Which reference clips to use (default: clip_14). Options: {list(REFERENCE_CLIPS.keys())}",
+        help=f"Which reference clips to use (default: data_ref). Options: {list(REFERENCE_CLIPS.keys())}",
     )
     args = parser.parse_args()
 

@@ -11,7 +11,7 @@ https://github.com/user-attachments/assets/7314e629-4f60-4e36-8897-465eca991890
 
 **Try it yourself** — the Colab notebook below lets you clone any voice from a short reference clip (no Apple Silicon required):
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/esherma/CharacterVoiceCloning/blob/master/voice_cloning_demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/jcmd13/CommanderData_TNG_TrainedVoice/blob/master/voice_cloning_demo.ipynb)
 
 ## How It Works
 
@@ -30,7 +30,7 @@ We tried PyTorch on Apple Silicon (MPS backend) first. It was ~3-4x slower than 
 | 1.7B-8bit | 0.72x | Audio generations overly crisp for target character (Commander Data); Likely a good choice for other characters|
 | 1.7B-bf16 | 4.25x | Slightly crisper audio, much slower. |
 
-RTF < 1.0 means faster than real-time. The **0.6B-8bit** model is the sweet spot.
+RTF < 1.0 means faster than real-time. The **0.6B-8bit** model is the sweet spot. These figures are from mlx-audio 0.3; on mlx-audio 0.5.8 (M4 Max), 0.6B-8bit with the chosen reference measures **0.25x** in transcript mode.
 
 ## Prerequisites
 
@@ -52,24 +52,27 @@ This searches YouTube, downloads selected videos, and walks you through extracti
 ### Generate speech with the cloned voice
 
 ```bash
-# Using the CLI (works anywhere if mlx-audio is installed globally)
+# Using the CLI (works anywhere if mlx-audio is installed globally: uv tool install mlx-audio)
 mlx_audio.tts.generate \
   --model mlx-community/Qwen3-TTS-12Hz-0.6B-Base-8bit \
   --text "I am functioning within normal parameters." \
-  --ref_audio data_output/clips/clip_14.wav \
-  --ref_text "The exact transcript of the reference clip" \
+  --ref_audio data_output/cmdr_data_voice/data_ref.wav \
+  --ref_text "$(cat data_output/cmdr_data_voice/data_ref.txt)" \
+  --temperature 0.5 \
   --play --stream
 ```
 
-Or run the benchmarking script to compare models:
+Or compare models and reference clips (outputs go to `clone_outputs/`):
 
 ```bash
-uv run python test_voice_clone.py 0.6B-8bit 1.7B-bf16 --clips clip_14
+uv run python test_voice_clone.py 0.6B-8bit 1.7B-bf16 --clips data_ref darmok_b
 ```
+
+The reference audio is not in this repo (`data_output/` is git-ignored): it is copyrighted dialogue. Cut your own 10–15 s clip of the character speaking alone, in a calm working voice, with no music, echo or background noise, and write its exact transcript next to it.
 
 ### Claude Code hook
 
-You can set up a Claude Code [Stop hook](https://docs.anthropic.com/en/docs/claude-code/hooks) so that every Claude response is spoken aloud in the cloned voice. See [`claude-code-hook/`](claude-code-hook/) for setup instructions.
+A Claude Code [Stop hook](https://code.claude.com/docs/en/hooks) speaks a short version of every Claude reply in the cloned voice. Claude Haiku rewrites the reply as Data would say it (at most 3 sentences), and the voice server starts playing after the first sentence, about 3 s after the reply ends. Run `python3 claude-code-hook/speak_pipeline.py --check` to see what is set up. See [`claude-code-hook/`](claude-code-hook/) for setup instructions.
 
 ## Key Findings
 
