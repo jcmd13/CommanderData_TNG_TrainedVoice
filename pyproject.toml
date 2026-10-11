@@ -1,11 +1,11 @@
 [project]
 name = "cmdr-data-voice"
 version = "0.1.0"
-description = "Add your description here"
+description = "Clone a character's voice from reference clips and speak Claude Code replies in it (Qwen3-TTS on MLX)"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "mlx-audio>=0.3",
+    "mlx-audio>=0.5.8",
     "soundfile>=0.13.1",
 ]
 
